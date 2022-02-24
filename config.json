@@ -1,0 +1,8 @@
+{
+    "db_info": {
+        "username": "electionman",
+        "password": null,
+        "db": "localhost",
+        "dialect": "postgresql"
+    }
+}
