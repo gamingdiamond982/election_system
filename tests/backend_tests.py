@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import time
 import sys
 import unittest
 from os import path, remove
@@ -37,6 +37,10 @@ Xud5/WXOogDFxzQLAgMBAAE=
 class TestSMTPClient(object):
     def __init__(self):
         self.sent_mail = []
+
+    def send_mails(self, *emails):
+        for email in emails:
+            self.send_mail(email)
 
     def send_mail(self, *args, **kwargs):
         self.sent_mail.append((args, kwargs))
@@ -100,3 +104,12 @@ class BackendTests(unittest.TestCase):
 
         with self.assertRaises(InvalidTokenError):
             backend.get_account_from_token(token)
+
+    def test_election(self):
+        backend = new_backend()
+        smtp_client_obj = backend._smtp_client
+        # for testing purposes we will use a stub class instead of an actual smtp client
+        self.assertIsInstance(smtp_client_obj, TestSMTPClient)
+        email_list = []
+        backend.create_election()
+
