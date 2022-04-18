@@ -5,8 +5,8 @@ import unittest
 from os import path, remove
 from jwt import InvalidTokenError
 
-# Add the src directory to path
-sys.path.append(path.join(path.dirname(path.dirname(path.abspath(__file__))), 'src'))
+# Add the app directory to path
+sys.path.append(path.join(path.dirname(path.dirname(path.abspath(__file__))), 'app'))
 
 from elections import Backend, UnauthorisedException, AccountExistsException, AccountNotFoundException
 
@@ -34,24 +34,12 @@ Xud5/WXOogDFxzQLAgMBAAE=
 -----END PUBLIC KEY-----'''
 
 
-class TestSMTPClient(object):
-    def __init__(self):
-        self.sent_mail = []
-
-    def send_mails(self, *emails):
-        for email in emails:
-            self.send_mail(email)
-
-    def send_mail(self, *args, **kwargs):
-        self.sent_mail.append((args, kwargs))
-
-
 def new_backend():
     try:
         remove('elections.db')
     except FileNotFoundError:
         pass
-    return Backend((test_priv_rsa_key, test_pub_rsa_key), TestSMTPClient(), db_url='sqlite:///elections.db')
+    return Backend((test_priv_rsa_key, test_pub_rsa_key), db_url='sqlite:///elections.db')
 
 
 class BackendTests(unittest.TestCase):
@@ -102,14 +90,5 @@ class BackendTests(unittest.TestCase):
 
         backend.revoke_tokens(backend.get_account(username))
 
-        with self.assertRaises(InvalidTokenError):
+        with self.assertRaises(Exception):
             backend.get_account_from_token(token)
-
-    def test_election(self):
-        backend = new_backend()
-        smtp_client_obj = backend._smtp_client
-        # for testing purposes we will use a stub class instead of an actual smtp client
-        self.assertIsInstance(smtp_client_obj, TestSMTPClient)
-        email_list = []
-        backend.create_election()
-

@@ -96,8 +96,7 @@ class InvalidTokenException(InvalidTokenError):
 
 
 class Backend(object):
-    def __init__(self, keypair, smtp_client, db_url='postgresql:///elections'):
-        self._smtp_client = smtp_client
+    def __init__(self, keypair, db_url='postgresql:///elections'):
         self.priv_key = keypair[0]
         self.pub_key = keypair[1]
         logger.debug('New Backend class initiated')
