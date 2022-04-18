@@ -5,5 +5,5 @@ tests/__pycache__/
 
 app/__pycache__/
 
-
+.idea/
 .logs/
