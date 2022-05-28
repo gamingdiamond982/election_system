@@ -42,25 +42,18 @@ class GmailClient(BaseEmailClient):
 
 
     def __init__(self):
-        self.service = self.create_service(self.CLIENT_SECRET_FILE, self.API_NAME, self.API_VERSION, self.SCOPES)
+        self.service = self.create_service()
     
     def send_email(self, email: MIMEMultipart):
         raw_string = base64.urlsafe_b64encode(email.as_bytes()).decode()
         return self.service.users().messages().send(userId='me', body={'raw': raw_string}).execute()
 
-    @staticmethod 
-    def create_service(client_secret_file, api_name, api_version, *scopes, prefix=''):
-        CLIENT_SECRET_FILE = client_secret_file
-        API_SERVICE_NAME = api_name
-        API_VERSION = api_version
-        SCOPES = [scope for scope in scopes[0]]
-        
+    def create_service(self, prefix=''):
         cred = None
         working_dir = os.getcwd()
         token_dir = 'token files'
-        pickle_file = f'token_{API_SERVICE_NAME}_{API_VERSION}{prefix}.pickle'
+        pickle_file = f'token_{self.API_NAME}_{self.API_VERSION}{prefix}.pickle'
 
-        ### Check if token dir exists first, if not, create the folder
         if not os.path.exists(os.path.join(working_dir, token_dir)):
             os.mkdir(os.path.join(working_dir, token_dir))
 
@@ -72,20 +65,18 @@ class GmailClient(BaseEmailClient):
             if cred and cred.expired and cred.refresh_token:
                 cred.refresh(Request())
             else:
-                flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, SCOPES)
+                flow = InstalledAppFlow.from_client_secrets_file(self.CLIENT_SECRET_FILE, self.SCOPES)
                 cred = flow.run_local_server()
             with open(os.path.join(working_dir, token_dir, pickle_file), 'wb') as token:
                 pickle.dump(cred, token)
 
         try:
-            service = build(API_SERVICE_NAME, API_VERSION, credentials=cred)
+            service = build(self.API_SERVICE_NAME, self.API_VERSION, credentials=cred)
             return service
         except Exception as e:
             os.remove(os.path.join(working_dir, token_dir, pickle_file))
             return None
 
-if __name__ == '__main__':
-    GmailClient().create_and_send_email('oj.nologic@gmail.com', 'bob', 'you are gay')
 
 
 

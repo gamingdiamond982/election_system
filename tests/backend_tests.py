@@ -2,13 +2,16 @@
 import time
 import sys
 import unittest
+import random
+import re
 from os import path, remove
 from jwt import InvalidTokenError
 
 # Add the app directory to path
 sys.path.append(path.join(path.dirname(path.dirname(path.abspath(__file__))), 'app'))
 
-from elections import Backend, UnauthorisedException, AccountExistsException, AccountNotFoundException
+from elections import Backend, UnauthorisedException, AccountExistsException, AccountNotFoundException, ElectionType
+from emails import BaseEmailClient
 
 test_priv_rsa_key = b'''-----BEGIN RSA PRIVATE KEY-----
 MIICWgIBAAKBgH0jEFHRr5bMjhOrIc15XYuZNYlpYstj2U7LICTTx6uno/z7+xdv
@@ -33,13 +36,20 @@ zcAGsBsOobqJXryHsb3hcp/WM1jtdW9fwGbMVUYVym0/YV83nG0F2ei4wzgn+ivi
 Xud5/WXOogDFxzQLAgMBAAE=
 -----END PUBLIC KEY-----'''
 
+class TestEmailClient(BaseEmailClient):
+    
+    def __init__(self):
+        self.email_cache = []
+
+    def send_email(self,email):
+        self.email_cache.append(email)
 
 def new_backend():
     try:
         remove('elections.db')
     except FileNotFoundError:
         pass
-    return Backend((test_priv_rsa_key, test_pub_rsa_key), db_url='sqlite:///elections.db')
+    return Backend((test_priv_rsa_key, test_pub_rsa_key), db_url='sqlite:///elections.db', email_client = TestEmailClient(), url_prefix = "https://em.qwrky.dev")
 
 
 class BackendTests(unittest.TestCase):
@@ -92,3 +102,24 @@ class BackendTests(unittest.TestCase):
 
         with self.assertRaises(Exception):
             backend.get_account_from_token(token)
+
+    def test_election_creation(self):
+        backend = new_backend()
+        backend.add_account('bob', '12345')
+        token = backend.login('bob', '12345')
+        account = backend.get_account_from_token(token)
+        election = backend.create_election(account, "Test-Election", ElectionType.STV, ["c1", "c2", "c3", "c4", "c5"], [f"email{i}@lwetb.ie" for i in range(120)], available_seats=2)
+        email_client = backend.email_client
+        self.assertEqual(len(email_client.email_cache), 120)
+        
+        voting_emails = random.sample(email_client.email_cache, 100)
+        for email in voting_emails:
+            endpoint = re.findall("https:\/\/em\.qwrky\.dev\/ballots\/[A-Za-z0-9_-]{107}", str(email))[0].split('/')[4]
+            ballot = backend.get_ballot_from_endpoint(endpoint)
+            ballot.vote(random.sample([f"c{i+1}" for i in range(5)], 5))
+
+        backend.generate_results(election)
+
+
+
+        

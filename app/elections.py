@@ -68,11 +68,11 @@ class Account(Base):
 class Election(Base):
     __tablename__ = 'elections'
     id = Column(Integer(), primary_key=True)
-    owner_id = Column(Integer, ForeignKey('accounts.id'))
+    owner_id = Column(UUIDType, ForeignKey('accounts.id'))
     owner = relationship("Account", back_populates='elections')
     name = Column(String(length=30))
     election_type = Column(SQLEnum(ElectionType), server_default='STV', nullable=False)
-    candidates = Column(ARRAY(String))
+    candidates = Column(JSON, server_default="[]")
     available_seats = Column(Integer)
     closed = Column(Boolean, default=False)
     ballots = relationship("Ballot", back_populates='election')
@@ -91,19 +91,27 @@ class Ballot(Base):
     election = relationship("Election", back_populates='ballots') 
     salt_uuid = Column(UUIDType(), nullable=False, default=uuid4)
     voted = Column(Boolean, default=False)
-    data = Column(ARRAY(String))
+    data = Column(JSON(), server_default="[]")
+    hash = None
 
     def __init__(self, *args, **kwargs):
-        super(*args, **kwargs)
-        unhashed = self.created_at.to_bytes((self.created_at.bit_length() + 7) // 8, 'big') + self.salt_uuid.bytes + self.uuid.bytes
-        self.hash = hashlib.sha512(unhashed).digest()
-        self.endpoint = self.generate_endpoint()
+        super().__init__(*args, **kwargs)
     
+    def generate_hash(self):
+        if self.hash is None:
+            unhashed = self.created_at.to_bytes((self.created_at.bit_length() + 7) // 8, 'big') + self.salt_uuid.bytes + self.uuid.bytes
+            self.hash = hashlib.sha512(unhashed).digest()
+        return self.hash
+
     def generate_endpoint(self):
-        return urlsafe_b64encode(self.uuid.bytes + self.hash).decode('utf-8').strip('=')
+        return urlsafe_b64encode(self.uuid.bytes + self.generate_hash()).decode('utf-8').strip('=')
 
-
-
+    def vote(self, data):
+        if self.voted:
+            raise Exception()
+        assert set(data).issubset(set(self.election.candidates))
+        self.data=data
+        self.voted=True
 
 
 
@@ -111,7 +119,8 @@ class Backend(object):
     def __init__(self, keypair, db_url='postgresql:///elections', email_client=None, url_prefix='http://localhost'):
         self.priv_key = keypair[0]
         self.pub_key = keypair[1]
-        self.email_client = GmailClient() if email_client is not None else email_client
+        self.url_prefix = url_prefix
+        self.email_client = GmailClient() if email_client is None else email_client
         logger.debug('New Backend class initiated')
         logger.debug(f"Connecting to the database at: {db_url}")
         self.engine = sqlalchemy.create_engine(db_url, future=True)
@@ -132,7 +141,7 @@ class Backend(object):
 
     @staticmethod
     def _verify_ballot(ballot: Ballot, hash: bytes):
-        return hmac.compare_digest(hash, ballot.hash)
+        return hmac.compare_digest(hash, ballot.generate_hash())
 
 
     def get_ballot_from_endpoint(self, endpoint):
@@ -162,19 +171,21 @@ class Backend(object):
     def get_account_by_id(self, id) -> Account:
         return self.session.query(Account).filter_by(id=id).one_or_none()
 
-    def create_election(self, owner: Account, name: str, election_type: ElectionType, email_list):
-        election = Election(owner_id=owner.id, election_type = election_type, name=name)
+    def create_election(self, owner: Account, name: str, election_type: ElectionType, candidates_list, email_list, available_seats=1):
+        election = Election(owner_id=owner.id, election_type = election_type, name=name, candidates=candidates_list, available_seats=available_seats)
         self.session.add(election)
         self.session.commit()
         for email in email_list:
-            ballot = Ballot(email=email, election_id=election.id)
+            ballot = Ballot(election_id=election.id)
             self.session.add(ballot)
-            self.email_client.create_and_send_email(email, 'Your ballot for {election.name}!', 'Go to {self.url_prefix}/ballots/{ballot.endpoint} to vote in this election.')
-        self.session.commit()
-
-    def generate_results(election):
+            self.session.commit()
+            self.email_client.create_and_send_email(email, f'Your ballot for {election.name}!', f'Go to {self.url_prefix}/ballots/{ballot.generate_endpoint()} to vote in this election.')
+        return election
+    
+    def generate_results(self, election):
         if election.election_type == ElectionType.STV:
-            return STV([{"count": 1, "ballot": ballot.data} for ballot in session.query(Ballots).filter_by(voted=True, election_id = election.id)]).as_dict()
+            ballots = [{"count": 1, "ballot": ballot.data} for ballot in self.session.query(Ballot).filter_by(voted=True, election_id = election.id)]
+            return STV(ballots, required_winners=election.available_seats).as_dict()
         else:
             raise NotImplementedError()
 
