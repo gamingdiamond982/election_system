@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+{% block title %}login{% endblock %}
+{% block content %}
+<form action="/login" method="get">
+    <div class="container">
+        <label for="username"><b>Username:</b></label><br/>
+        <input type="text" placeholder="Enter Username" name="username" required><br/>
+
+        <label for="password"><b>Password:</b></label><br/>
+        <input type="password" placeholder="Enter Password" name="password" required><br/>
+
+        <button type="submit">Login</button>
+    </div>
+    <div class="container" style="background-color:#f1f1f1">
+        
+        <span class="psw">Not registered? Click <a href="/register">here</a></span>
+    </div>
+</form>
+{% endblock %}

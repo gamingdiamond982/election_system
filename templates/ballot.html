@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="/sort-list.css"/>
+<script src="/sort-list.js"></script>
+<script>
+    window.addEventListener("DOMContentLoaded", () => {
+        slist(document.getElementById("sortlist"));
+    });
+</script>
+{% endblock %}
+{% block title %}ballot{% endblock %}
+{% block content %}
+<form method="get">
+    <div class="container">
+        <ul id="sortlist">
+            {% for candidate in ballot.election.candidates %}
+            <li id="{{ candidate }}">{{ candidate }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</form>
+{% endblock %}

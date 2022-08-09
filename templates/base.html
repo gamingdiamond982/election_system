@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {% block head %}
+        <link rel="stylesheet" href="/style.css">
+        <title>{% block title %}{% endblock %} - Election Manager</title>
+        {% endblock %}
+    </head>
+    <body>
+        <div class="navbar">
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/login">Login</a></li>
+                <li><a href="/elections">My Elections</a></li>
+                <li><a href="/contact">Contact us</a></li>
+            </ul>
+        </div>
+        <center>
+        <div id="content">
+            {% block content required %}
+            {% endblock %}
+        </div>
+        </center>
+    </body>
+</html>

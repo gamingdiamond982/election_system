@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}elections{% endblock %}
+{% block content %}
+<div class="container">
+    <h1>Your Elections: </h1>
+    <ul>
+        {% for election in elections %}
+        <li>
+            <a href="/elections/{{ election.id }}">{{ election.name }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+    <a href="/elections/create"><button>Create Election!</button></a>
+</div>
+{% endblock %}

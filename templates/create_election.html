@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Election Creation Screen{% endblock %}
+{% block content %}
+<form action="/elections/create" method="get">
+    <div class="container">
+        <label for="name"><b>Election Name:</b></label>
+        <input type="text" placeholder="Enter the name of your election" name="name" required>
+
+        <label for="type"><b>Election Type (more coming soon):</b></label><br/><br/>
+        <select name="type" size="1">
+            <option value="STV">Single Transferrible Vote</option>
+        </select><br/><br/>
+        
+        <label for="candidates_list"><b>Candidates: </b></label><br/>
+        <textarea name="candidates_list" rows="5"></textarea><br/>
+
+        <label for="email_list"><b>Email List: </b></label><br/>
+        <textarea name="email_list" rows="5"></textarea><br/>
+
+        <label for="required_seats"><b>Available Seats: </b></label><br/>
+        <input type="number"  name="required_seats" required>
+
+
+        <button type="submit">Create Election</button>
+    </div>
+</div>
+{% endblock %}
