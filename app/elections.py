@@ -51,12 +51,12 @@ class ElectionType(Enum):
 
 class Account(Base):
     __tablename__ = 'accounts'
-    id = Column(UUIDType, primary_key=True, default=uuid4)
+    id = Column(UUIDType, primary_key=True, default=uuid4, unique=True)
     username = Column(String(length=30), nullable=False, primary_key=True)
     password = Column(String(length=120), nullable=False)
     current_session_id = Column(UUIDType, nullable=True)
     last_token_reset_timestamp = Column(TIMESTAMP(), default=datetime.datetime.now)
-    elections = relationship("Election", back_populates='owner')
+    elections = relationship("Election", back_populates = "owner")
 
     def __repr__(self):
         return f"<Account id={self.id}, " \
@@ -67,7 +67,7 @@ class Account(Base):
 
 class Election(Base):
     __tablename__ = 'elections'
-    id = Column(Integer(), primary_key=True)
+    id = Column(UUIDType, primary_key=True, default=uuid4)
     owner_id = Column(UUIDType, ForeignKey('accounts.id'))
     owner = relationship("Account", back_populates='elections')
     name = Column(String(length=30))
@@ -87,7 +87,7 @@ class Ballot(Base):
     __tablename__ = 'ballots'
     uuid = Column(UUIDType(), primary_key=True, default=uuid4)
     created_at = Column(Integer(), default=lambda: round(time()))
-    election_id = Column(Integer, ForeignKey('elections.id'))
+    election_id = Column(UUIDType, ForeignKey('elections.id'))
     election = relationship("Election", back_populates='ballots') 
     salt_uuid = Column(UUIDType(), nullable=False, default=uuid4)
     voted = Column(Boolean, default=False)
@@ -123,7 +123,7 @@ class Backend(object):
         self.email_client = GmailClient() if email_client is None else email_client
         logger.debug('New Backend class initiated')
         logger.debug(f"Connecting to the database at: {db_url}")
-        self.engine = sqlalchemy.create_engine(db_url, future=True)
+        self.engine = sqlalchemy.create_engine(db_url, future=True, echo=True)
         Base.metadata.create_all(self.engine)
         self.session = Session(self.engine)
         
@@ -164,6 +164,7 @@ class Backend(object):
         account = Account(username=username, password=password_hash)
         self.session.add(account)
         self.session.commit()
+        return self.login(username, password)
 
     def get_account(self, username) -> Account:
         return self.session.query(Account).filter_by(username=username).one_or_none()
@@ -181,6 +182,9 @@ class Backend(object):
             self.session.commit()
             self.email_client.create_and_send_email(email, f'Your ballot for {election.name}!', f'Go to {self.url_prefix}/ballots/{ballot.generate_endpoint()} to vote in this election.')
         return election
+    
+    def get_elections(self, owner: Account):
+        return self.session.query(Election).filter_by(owner_id = owner.id).all()
     
     def generate_results(self, election):
         if election.election_type == ElectionType.STV:

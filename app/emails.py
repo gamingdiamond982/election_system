@@ -71,9 +71,10 @@ class GmailClient(BaseEmailClient):
                 pickle.dump(cred, token)
 
         try:
-            service = build(self.API_SERVICE_NAME, self.API_VERSION, credentials=cred)
+            service = build(self.API_NAME, self.API_VERSION, credentials=cred)
             return service
         except Exception as e:
+            print(e)
             os.remove(os.path.join(working_dir, token_dir, pickle_file))
             return None
 
