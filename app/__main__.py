@@ -56,7 +56,7 @@ logger.addHandler(fh)
 
 routes = web.RouteTableDef()
 
-unprotected_routes = re.compile("^\/($|login$|style.css$|register$|favicon\.ico$|ballots\/[A-Za-z0-9_-]{107}$)")
+unprotected_routes = re.compile("^\/(files\/(.*\.css|.*\.js)$|login$|style.css$|register$|favicon\.ico$|ballots\/[A-Za-z0-9_-]{107}$)")
 
 
 
@@ -113,9 +113,14 @@ async def get_create_election(request):
     resp = web.Response(status=302, headers={"Location": "/elections"})
     return resp
 
-
-@routes.get('/{path:.*}')
+@routes.get('/')
 async def index(request):
+    template = jinja_env.get_template('index.html')
+    return web.Response(text=template.render(), content_type="HTML")
+
+
+@routes.get('/files/{path:.*}')
+async def get_file(request):
     try:
         path = request.match_info["path"]
         template = jinja_env.get_template(path if path != "" else "index.html")

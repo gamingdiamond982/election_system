@@ -1,3 +1,6 @@
+aiohttp
+cryptography
+jinja2
 pyjwt
 sqlalchemy
 sqlalchemy_utils
