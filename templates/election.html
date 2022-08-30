@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block head%}
+{{ super() }}
+<script>
+	function close_election() {
+		
+	}
+</script>
+{% endblock %}
+{% block title %}{{ election.name }}{% endblock %}
+{% block content %}
+<div class="container">
+	<h1>Welcome to the control panel for {{ election.name }} </h1>
+	<table style="width:100%">
+		<tr>
+			<td>Name: </td>
+			<td class=right>{{ election.name }}</td>
+		</tr>
+		<tr>
+			<td>Owner Name: </td>
+			<td class=right>{{ election.owner.username }}</td>
+		</tr>
+		<tr>
+			<td>Election Type: </td>
+			<td class=right>{{ election.election_type }}</td>
+		</tr>
+		<tr>
+			<td>Num. Seats:</td>
+			<td class=right>{{ election.available_seats }}</td>
+		</tr>
+		<tr>
+			<td>Candidates</td>
+			<td class=right>
+				<ul>
+					{% for candidate in election.candidates %}
+					<li>{{ candidate }}</li>
+					{% endfor %}
+				</ul>
+			</td>
+		</tr>
+		
+		<tr>
+			<td>Ballot's cast: </td>
+			<td class=right>{{ election.get_num_ballots_cast() }}/{{ election.ballots|length }} {{ election.get_percent_ballots_cast() }}%</td>
+		</tr>
+		<tr>
+			<td style="width:100%">
+				<button onclick="close_election()">
+					Close this election and/or view results
+				</button>
+			</td>
+		</tr>
+	</table>
+
+
+</div>
+{% endblock %}

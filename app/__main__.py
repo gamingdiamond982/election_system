@@ -4,7 +4,7 @@ from os import mkdir
 from aiohttp import web
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 import json
-
+from uuid import UUID
 import logging
 import sys
 import re
@@ -56,7 +56,7 @@ logger.addHandler(fh)
 
 routes = web.RouteTableDef()
 
-unprotected_routes = re.compile("^\/(files\/(.*\.css|.*\.js)$|login$|style.css$|register$|favicon\.ico$|ballots\/[A-Za-z0-9_-]{107}$)")
+unprotected_routes = re.compile("^\/(files\/(.*\.css|.*\.js)$|login$|style.css$|register$|favicon\.ico$|ballots\/[A-Za-z0-9_-]{107}($|\/vote$))")
 
 
 
@@ -84,11 +84,22 @@ async def register(request):
     return resp
 
 @routes.get('/ballots/{endpoint:[A-Za-z0-9_-]{107}}')
-def get_ballot(request):
+async def get_ballot(request):
     endpoint = request.match_info["endpoint"]
     ballot = backend.get_ballot_from_endpoint(endpoint)
-    template = jinja_env.get_template('ballot.html')
+    template = jinja_env.get_template('ballot.html' if not ballot.voted else 'voted.html')
     return web.Response(text=template.render(ballot=ballot), content_type="HTML")
+
+@routes.post('/ballots/{endpoint:[A-Za-z0-9_-]{107}}/vote')
+async def vote(request):
+    endpoint = request.match_info["endpoint"]
+    ballot = backend.get_ballot_from_endpoint(endpoint)
+    data = await request.json()
+    try:
+        ballot.vote(data)
+    except:
+        raise web.HTTPForbidden()
+    raise web.HTTPOk()
     
 
 @routes.get('/elections')
@@ -101,14 +112,12 @@ async def elections(request):
 @routes.get('/elections/create')
 async def get_create_election(request):
     data = request.query
-    print(set(data.keys()))
     if not {"name", "type", "candidates_list", "email_list", "required_seats"}.issubset(set(data.keys())):
         template = jinja_env.get_template('create_election.html')
         return web.Response(text=template.render(), content_type="HTML")
     candidates_list = data["candidates_list"].split(",")
     email_list = data["email_list"].split(",")
     election_type = ElectionType[data["type"]]
-    print(type(email_list))
     backend.create_election(request['account'], data["name"], election_type, candidates_list, email_list, int(data["required_seats"]))
     resp = web.Response(status=302, headers={"Location": "/elections"})
     return resp
@@ -125,8 +134,20 @@ async def get_file(request):
         path = request.match_info["path"]
         template = jinja_env.get_template(path if path != "" else "index.html")
     except Exception as e:
-        template = jinja_env.get_template("404.html")
+        raise web.HTTPNotFound()
     return web.Response(text=template.render(), content_type="HTML")
+
+@routes.get('/elections/{uuid:[0-9a-z]{8}-[0-9a-z]{4}-4[0-9a-z]{3}-[0-9a-z]{4}-[0-9a-z]{12}$}')
+async def get_election(request):
+    election_id = UUID(request.match_info["uuid"])
+    logger.info(f"Requested {election_id}")
+    election = backend.get_election(election_id)
+    if election is None:
+        raise web.HTTPNotFound()
+    if election.owner != request["account"]:
+        raise web.HTTPUnauthorized()
+    template = jinja_env.get_template("election.html")
+    return web.Response(text=template.render(election=election), content_type="HTML")
 
 @web.middleware
 async def request_logger(request: web.Request, handler):
@@ -137,7 +158,6 @@ async def request_logger(request: web.Request, handler):
 async def authenticate(request: web.Request, handler):
     if unprotected_routes.match(request.rel_url.raw_path):
         return await handler(request)
-    print(request.cookies)
     if 'token' not in request.cookies.keys():
         raise web.HTTPFound('/login')
     

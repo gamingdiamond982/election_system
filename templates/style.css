@@ -27,8 +27,19 @@
 }
 
 
-form {
+form, table {
     border: 3px solid #f1f1f1;
+}
+
+table {
+    float: center;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}
+td {
+    width: 50%;
+    text-align: center;
 }
 
 input[type=text], input[type=password], textarea {

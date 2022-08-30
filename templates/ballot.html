@@ -7,18 +7,28 @@
     window.addEventListener("DOMContentLoaded", () => {
         slist(document.getElementById("sortlist"));
     });
+    function submit() {
+    	let list = document.getElementById("sortlist").getElementsByTagName("li")
+	let ballot = []
+	for (let i of list) {
+		ballot.push(i.textContent)
+	}
+	var xhr = new XMLHttpRequest();
+	xhr.open("POST", window.location.pathname + "/vote", false);
+	xhr.setRequestHeader('Content-Type', 'application/json');
+	xhr.send(JSON.stringify(ballot))
+	location.reload()
+    }
 </script>
 {% endblock %}
 {% block title %}ballot{% endblock %}
 {% block content %}
-<form method="get">
     <div class="container">
         <ul id="sortlist">
             {% for candidate in ballot.election.candidates %}
             <li id="{{ candidate }}">{{ candidate }}</li>
             {% endfor %}
         </ul>
-	<button type="submit">Vote!</button> 
+	<button onclick="submit()">Vote!</button>
     </div>
-</form>
 {% endblock %}

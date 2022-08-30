@@ -80,7 +80,11 @@ class Election(Base):
     def __repr__(self):
         return f"<Election id={self.id}, name={self.name}, owner={self.owner.__repr__()}, election_type={self.election_type}>"
 
+    def get_num_ballots_cast(self):
+        return len([ballot for ballot in self.ballots if ballot.voted])
 
+    def get_percent_ballots_cast(self):
+        return round(self.get_num_ballots_cast()/len(self.ballots), 2)
 
 
 class Ballot(Base):
@@ -183,6 +187,11 @@ class Backend(object):
             self.email_client.create_and_send_email(email, f'Your ballot for {election.name}!', f'Go to {self.url_prefix}/ballots/{ballot.generate_endpoint()} to vote in this election.')
         return election
     
+    def get_election(self, election_id):
+        if not isinstance(election_id, UUID):
+            election_id = UUID(election_id)
+        return self.session.query(Election).filter_by(id=election_id).one_or_none()
+
     def get_elections(self, owner: Account):
         return self.session.query(Election).filter_by(owner_id = owner.id).all()
     
