@@ -66,7 +66,10 @@ async def login(request):
     if 'username' not in data and 'password' not in data:
         template = jinja_env.get_template('login.html')
         return web.Response(text=template.render(), content_type="HTML")
-    token = backend.login(data['username'], data['password'])
+    try:
+        token = backend.login(data['username'], data['password'])
+    except:
+        token = ""
     resp = web.Response(status=302, headers={"Location":"/"})
     resp.set_cookie('token', token)
     return resp
