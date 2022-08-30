@@ -61,7 +61,6 @@ class Account(Base):
     def __repr__(self):
         return f"<Account id={self.id}, " \
                f"username='{self.username}', " \
-               f"email='{self.email}', " \
                f"current_session_id={self.current_session_id}> "
 
 
@@ -84,7 +83,7 @@ class Election(Base):
         return len([ballot for ballot in self.ballots if ballot.voted])
 
     def get_percent_ballots_cast(self):
-        return round(self.get_num_ballots_cast()/len(self.ballots), 2)
+        return round((self.get_num_ballots_cast()/len(self.ballots))*100, 2)
 
 
 class Ballot(Base):
@@ -198,6 +197,13 @@ class Backend(object):
     def generate_results(self, election):
         if election.election_type == ElectionType.STV:
             ballots = [{"count": 1, "ballot": ballot.data} for ballot in self.session.query(Ballot).filter_by(voted=True, election_id = election.id)]
+            if len(ballots) == 0:
+                return {
+                        "candidates": election.candidates,
+                        "winners": {},
+                        "quota": None,
+                        "rounds": []
+                }
             return STV(ballots, required_winners=election.available_seats).as_dict()
         else:
             raise NotImplementedError()

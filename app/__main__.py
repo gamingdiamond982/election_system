@@ -140,14 +140,26 @@ async def get_file(request):
 @routes.get('/elections/{uuid:[0-9a-z]{8}-[0-9a-z]{4}-4[0-9a-z]{3}-[0-9a-z]{4}-[0-9a-z]{12}$}')
 async def get_election(request):
     election_id = UUID(request.match_info["uuid"])
-    logger.info(f"Requested {election_id}")
     election = backend.get_election(election_id)
     if election is None:
         raise web.HTTPNotFound()
     if election.owner != request["account"]:
         raise web.HTTPUnauthorized()
     template = jinja_env.get_template("election.html")
-    return web.Response(text=template.render(election=election), content_type="HTML")
+    return web.Response(text=template.render(election=election, results=backend.generate_results(election)), content_type="HTML")
+
+
+@routes.post('/elections/{uuid:[0-9a-z]{8}-[0-9a-z]{4}-4[0-9a-z]{3}-[0-9a-z]{4}-[0-9a-z]{12}}/close')
+async def close_election(request):
+    election_id = UUID(request.match_info["uuid"])
+    election = backend.get_election(election_id)
+    if election is None:
+        raise web.HTTPNotFound()
+    if election.owner != request["account"]:
+        raise web.HTTPUnauthorized()
+    election.closed = True
+    backend.session.commit()
+    raise web.HTTPOk()
 
 @web.middleware
 async def request_logger(request: web.Request, handler):

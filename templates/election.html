@@ -2,9 +2,13 @@
 {% block head%}
 {{ super() }}
 <script>
-	function close_election() {
-		
-	}
+	
+    async function submit() {
+		await fetch(window.location.pathname + "/close", {
+			method: 'POST'
+		});
+		location.reload()
+    }
 </script>
 {% endblock %}
 {% block title %}{{ election.name }}{% endblock %}
@@ -14,23 +18,23 @@
 	<table style="width:100%">
 		<tr>
 			<td>Name: </td>
-			<td class=right>{{ election.name }}</td>
+			<td>{{ election.name }}</td>
 		</tr>
 		<tr>
 			<td>Owner Name: </td>
-			<td class=right>{{ election.owner.username }}</td>
+			<td>{{ election.owner.username }}</td>
 		</tr>
 		<tr>
 			<td>Election Type: </td>
-			<td class=right>{{ election.election_type }}</td>
+			<td>{{ election.election_type }}</td>
 		</tr>
 		<tr>
 			<td>Num. Seats:</td>
-			<td class=right>{{ election.available_seats }}</td>
+			<td>{{ election.available_seats }}</td>
 		</tr>
 		<tr>
-			<td>Candidates</td>
-			<td class=right>
+			<td>Candidates:</td>
+			<td>
 				<ul>
 					{% for candidate in election.candidates %}
 					<li>{{ candidate }}</li>
@@ -41,16 +45,56 @@
 		
 		<tr>
 			<td>Ballot's cast: </td>
-			<td class=right>{{ election.get_num_ballots_cast() }}/{{ election.ballots|length }} {{ election.get_percent_ballots_cast() }}%</td>
+			<td>{{ election.get_num_ballots_cast() }}/{{ election.ballots|length }} {{ election.get_percent_ballots_cast() }}%</td>
+		</tr>
+		
+		{% if election.closed%}
+		<tr>
+			<th><br>Results:</th>
 		</tr>
 		<tr>
-			<td style="width:100%">
-				<button onclick="close_election()">
-					Close this election and/or view results
-				</button>
+			<td>Winner(s): </td>
+			<td>
+				<ul>
+					{% for winner in results["winners"] %}
+					<li>{{ winner }}</li>
+					{% endfor %}
+				</ul>
 			</td>
 		</tr>
+		<tr>
+			<td>Quota: </td>
+			<td>{{ results["quota"] }}</td>
+		</tr>
+		{% for round in results["rounds"]%}
+		<tr>
+			<th><br>Round {{ loop.index }} tallies:</th>
+		</tr>
+		{% for Candidate, Tally in round["tallies"].items()%}
+		<tr>
+			<td>{{ Candidate }}</td>
+			<td>{{ Tally }}</td>
+		</tr>
+		{% endfor %}
+		<tr>
+			<td> Winner(s) at round end: </td>
+			<td>
+				<ul>
+					{% for winner in round["winners"] %}
+					<li>{{ winner }}</li>
+					{% endfor %}
+				</ul>
+			</td>
+		</tr>
+		{% endfor %}
+
 	</table>
+		{% else %}
+	</table>
+		
+	<button onclick="submit()">Close this election and view results</button>
+		{% endif %}
+
 
 
 </div>

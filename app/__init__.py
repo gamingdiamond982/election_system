@@ -1,4 +1,3 @@
-from app import *
-from elections import *
-
+from .elections import *
+from .__main__ import *
 
