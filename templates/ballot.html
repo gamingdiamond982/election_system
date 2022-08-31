@@ -24,6 +24,8 @@
 {% block title %}ballot{% endblock %}
 {% block content %}
     <div class="container">
+	    <h1>please drag the candidates into your preffered order </h1> 
+	    <p>with the candidate on top being the candidate you most want to win and the one on the bottom the one you least want to win</p>
         <ul id="sortlist">
             {% for candidate in ballot.election.candidates %}
             <li id="{{ candidate }}">{{ candidate }}</li>
