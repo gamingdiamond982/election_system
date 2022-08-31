@@ -90,7 +90,7 @@ async def register(request):
 async def get_ballot(request):
     endpoint = request.match_info["endpoint"]
     ballot = backend.get_ballot_from_endpoint(endpoint)
-    template = jinja_env.get_template(('ballot.html' if not ballot.voted else 'voted.html') if not election.closed else 'closed.html')
+    template = jinja_env.get_template(('ballot.html' if not ballot.voted else 'voted.html') if not ballot.election.closed else 'closed.html')
     return web.Response(text=template.render(ballot=ballot), content_type="HTML")
 
 @routes.post('/ballots/{endpoint:[A-Za-z0-9_-]{107}}/vote')
