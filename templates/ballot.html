@@ -7,17 +7,21 @@
     window.addEventListener("DOMContentLoaded", () => {
         slist(document.getElementById("sortlist"));
     });
-    function submit() {
+    async function submit() {
     	let list = document.getElementById("sortlist").getElementsByTagName("li")
-	let ballot = []
-	for (let i of list) {
-		ballot.push(i.textContent)
-	}
-	var xhr = new XMLHttpRequest();
-	xhr.open("POST", window.location.pathname + "/vote", false);
-	xhr.setRequestHeader('Content-Type', 'application/json');
-	xhr.send(JSON.stringify(ballot))
-	location.reload()
+    	let ballot = []
+    	for (let i of list) {
+    		ballot.push(i.textContent)
+    	}
+        await fetch(window.location.pathname+"/vote", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        data: JSON.stringify(ballot)
+            
+        })
+    	location.reload()
     }
 </script>
 {% endblock %}
