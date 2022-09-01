@@ -1,6 +1,6 @@
 {
-    "db_url": "postgresql://electionmanager@localhost:5432/elections",
-    "url_prefix": "http://localhost:8000",
+    "db_url": "postgresql://electionmanager:SecurePassword@localhost:5432/elections",
+    "url_prefix": "https://em.qwrky.dev",
     "keypair": [
         "-----BEGIN RSA PRIVATE KEY-----\nMIICXQIBAAKBgQCOSIF0ZDmhL2nqC+FXFnDKymS8vqWA5gqnoQ0sJildVmvSMp2y\n0H32YqVTeRjekq2QfrhJfprBo+QWixx9qrkT7WAVKzzyfVLJ53Sdmt36Ls10kL1P\n0ir1PomiddCYT/2XvDwLoyPk7tn9amLRRHvQYfkNPG0oUEafIh5RaJt2PQIDAQAB\nAoGAP9OItwSq0YKqeYJg0KdRa7cFH6JKLhuD1hSqCw8HaUZ2UbHBClD64Ib58QsW\nu+mCkJo340g29fymOfKnkjv+j6J3kRHlMYOFW53pvIEByYJqxDsPpCmCrwN1csq3\nOmjtGXTFMg9FjpREetl7OXaQcdAGXRJJawcbsBAilqTAIsUCQQDnYHS4d3PvBQ8m\niDYzgoXXmywm0cMQj6S8f/VQ7XBwA0OqMUA/DMJ8KQy9e79j4UzJmDPAM8gOG+Zf\nA1lqXus3AkEAnWzRT/bUPi85lrj0aToU7X2DLx4a8bxmRHhDUShSEBEEfcBwtD+y\nWrNi0TsXeDcsI4/acjbxnOMSl9bkquesKwJBANvwI2OKIQkO3RT6m9Mg+ks19KU9\n9deTQ7vvQmjYG25OnA523KRSY7kUaEjiDc9KxexHosHMNxm6SaT9kQx9B8cCQH/0\nNp0cLp7sm45afq4Yu3HdFodxnMznKOh2J6ELeMf+TPw5MmIPc9QtAiC2OvlHPuUY\nw6EZ74BpQG+SBwKyk0kCQQCJQZI/6o/J1tqjF7ArcIs0i35UJxoGPBKnK3Ebc+R1\nhnopJgKYo7jbAj4Nem+wbBLQBjRYp3E/0F5J3lfNw9Cn\n-----END RSA PRIVATE KEY-----",
         "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCOSIF0ZDmhL2nqC+FXFnDKymS8\nvqWA5gqnoQ0sJildVmvSMp2y0H32YqVTeRjekq2QfrhJfprBo+QWixx9qrkT7WAV\nKzzyfVLJ53Sdmt36Ls10kL1P0ir1PomiddCYT/2XvDwLoyPk7tn9amLRRHvQYfkN\nPG0oUEafIh5RaJt2PQIDAQAB\n-----END PUBLIC KEY-----"

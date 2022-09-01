@@ -180,9 +180,11 @@ class Backend(object):
         self.session.add(election)
         self.session.commit()
         for email in email_list:
+            email = email.strip()
             ballot = Ballot(election_id=election.id)
             self.session.add(ballot)
             self.session.commit()
+            print(f"----------------> Sending email to: {email}")
             self.email_client.create_and_send_email(email, f'Your ballot for {election.name}!', f'Go to {self.url_prefix}/ballots/{ballot.generate_endpoint()} to vote in this election.')
         return election
     

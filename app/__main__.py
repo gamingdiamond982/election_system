@@ -131,14 +131,17 @@ async def index(request):
     return web.Response(text=template.render(), content_type="HTML")
 
 
-@routes.get('/files/{path:.*}')
+@routes.get('/files/{path:.*\..*}')
 async def get_file(request):
     try:
         path = request.match_info["path"]
         template = jinja_env.get_template(path if path != "" else "index.html")
     except Exception as e:
         raise web.HTTPNotFound()
-    return web.Response(text=template.render(), content_type="HTML")
+    split_path = path.split(".")
+    extension = split_path[len(split_path)-1]
+    content_type = {"html": "HTML", "css": "text/css", "js": "text/javascript"}[extension.lower()]
+    return web.Response(text=template.render(), content_type=content_type)
 
 @routes.get('/elections/{uuid:[0-9a-z]{8}-[0-9a-z]{4}-4[0-9a-z]{3}-[0-9a-z]{4}-[0-9a-z]{12}$}')
 async def get_election(request):
