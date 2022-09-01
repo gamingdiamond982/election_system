@@ -118,7 +118,7 @@ async def get_create_election(request):
     if not {"name", "type", "candidates_list", "email_list", "required_seats"}.issubset(set(data.keys())):
         template = jinja_env.get_template('create_election.html')
         return web.Response(text=template.render(), content_type="HTML")
-    candidates_list = data["candidates_list"].split(",")
+    candidates_list = [i.strip('\n') for i in data["candidates_list"].split(",") if i.strip('\n') != '']
     email_list = data["email_list"].split(",")
     election_type = ElectionType[data["type"]]
     backend.create_election(request['account'], data["name"], election_type, candidates_list, email_list, int(data["required_seats"]))

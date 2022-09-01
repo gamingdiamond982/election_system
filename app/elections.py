@@ -85,6 +85,8 @@ class Election(Base):
     def get_percent_ballots_cast(self):
         return round((self.get_num_ballots_cast()/len(self.ballots))*100, 2)
 
+class AlreadyVotedException(Exception):
+    pass
 
 class Ballot(Base):
     __tablename__ = 'ballots'
@@ -111,7 +113,7 @@ class Ballot(Base):
 
     def vote(self, data):
         if self.voted:
-            raise Exception()
+            raise AlreadyVotedException()
         assert set(data).issubset(set(self.election.candidates))
         self.data=data
         self.voted=True
