@@ -1,5 +1,5 @@
 venv/
-*.json
+config.json
 *.db
 
 token\ files/
